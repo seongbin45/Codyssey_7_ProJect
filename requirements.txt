@@ -1,0 +1,8 @@
+yfinance==1.7.0
+pandas>=2.0.0
+numpy>=1.26.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+statsmodels>=0.14.0
+dash>=2.14.0
+plotly>=5.18.0
