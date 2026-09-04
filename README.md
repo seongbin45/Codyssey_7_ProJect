@@ -64,8 +64,9 @@ pip install -r requirements.txt
 > ```bash
 > python3 -m venv venv
 > source venv/bin/activate
-> pip install -r requirements.txt
+> python3 -m pip install -r requirements.txt
 > ```
+> `pip`만 단독으로 실행하면 macOS 환경에 따라 PATH가 꼬여 엉뚱한 파이썬을 참조하거나 명령을 못 찾는 경우가 있습니다. `python3 -m pip`는 방금 활성화한 `venv`의 `python3`에 확실히 묶인 pip를 쓰므로 더 안전합니다.
 
 ### 2. 데이터 수집
 ```powershell
