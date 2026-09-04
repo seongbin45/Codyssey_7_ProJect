@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 
 def verify():
@@ -44,8 +45,10 @@ def verify():
         print("\n[FAIL] Some verification checks failed:")
         for err in errors:
             print(f" - {err}")
+        return False
     else:
         print("\n[SUCCESS] All automated verifications passed successfully!")
+        return True
 
 if __name__ == "__main__":
-    verify()
+    sys.exit(0 if verify() else 1)
