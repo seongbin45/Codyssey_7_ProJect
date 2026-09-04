@@ -66,11 +66,12 @@ def generate_monthly_return_chart(df: pd.DataFrame, save_dir: str):
     print(f"[INFO] Saved: {save_path}")
 
 def generate_volatility_volume_chart(df: pd.DataFrame, save_dir: str):
-    """3. 변동성 민감도 분석 (10일, 20일, 40일 롤링 표준편차) 및 거래량"""
-    df['volatility_10'] = df['close'].rolling(window=10).std()
-    df['volatility_20'] = df['close'].rolling(window=20).std()
-    df['volatility_40'] = df['close'].rolling(window=40).std()
-    
+    """3. 변동성 민감도 분석 (10일, 20일, 40일 롤링 표준편차, 일별 수익률 기준) 및 거래량"""
+    daily_return = df['close'].pct_change() * 100
+    df['volatility_10'] = daily_return.rolling(window=10).std()
+    df['volatility_20'] = daily_return.rolling(window=20).std()
+    df['volatility_40'] = daily_return.rolling(window=40).std()
+
     fig, ax1 = plt.subplots(figsize=(14, 7))
     
     # 변동성 라인차트 (다중 윈도우)
@@ -79,18 +80,18 @@ def generate_volatility_volume_chart(df: pd.DataFrame, save_dir: str):
     ax1.plot(df.index, df['volatility_40'], color='magenta', label='40-Day Volatility', alpha=0.6)
     
     ax1.set_xlabel('Date')
-    ax1.set_ylabel('Volatility (Std Dev)', color='purple')
+    ax1.set_ylabel('Volatility (Std Dev of Daily Return, %)', color='purple')
     ax1.tick_params(axis='y', labelcolor='purple')
     ax1.legend(loc='upper left')
-    
+
     # 거래량 바차트 (우측 축)
     ax2 = ax1.twinx()
     ax2.bar(df.index, df['volume'], color='gray', alpha=0.3, label='Volume')
     ax2.set_ylabel('Volume', color='gray')
     ax2.tick_params(axis='y', labelcolor='gray')
     ax2.legend(loc='upper right')
-    
-    plt.title('Volatility Sensitivity Analysis (10, 20, 40 days) and Trading Volume')
+
+    plt.title('Volatility Sensitivity Analysis (10, 20, 40 days, Daily Return %) and Trading Volume')
     fig.tight_layout()
     
     save_path = os.path.join(save_dir, '03_volatility_volume.png')
