@@ -55,21 +55,27 @@ def update_chart(start_date, end_date, sma_window):
     if df.empty:
         return go.Figure()
         
+    # SMA는 날짜로 자르기 전, 전체 이력 기준으로 계산한다.
+    # (필터링 후 계산하면 구간 시작부에서 실제 N일치 데이터가 없어 왜곡된 값이 나온다)
+    sma_full = df['close'].rolling(window=sma_window).mean()
+
     filtered_df = df.loc[start_date:end_date].copy()
     if filtered_df.empty:
         return go.Figure()
-        
-    filtered_df['SMA'] = filtered_df['close'].rolling(window=sma_window, min_periods=1).mean()
-    
+
+    filtered_df['SMA'] = sma_full.loc[filtered_df.index]
+
     # 서브플롯 생성: 캔들차트 & 거래량
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
                         vertical_spacing=0.05, row_heights=[0.7, 0.3])
 
-    # 캔들차트
+    # 캔들차트 (국내 관행: 상승=빨강, 하락=파랑 — 아래 거래량 바 색상과 통일)
     fig.add_trace(go.Candlestick(
         x=filtered_df.index,
         open=filtered_df['open'], high=filtered_df['high'],
         low=filtered_df['low'], close=filtered_df['close'],
+        increasing_line_color='red', increasing_fillcolor='red',
+        decreasing_line_color='blue', decreasing_fillcolor='blue',
         name='Price'
     ), row=1, col=1)
     
