@@ -105,4 +105,4 @@ def update_chart(start_date, end_date, sma_window):
 
 if __name__ == '__main__':
     print("[INFO] 대시보드 서버를 시작합니다. http://127.0.0.1:8050 에 접속하세요.")
-    app.run_server(debug=True, port=8050)
+    app.run(debug=True, port=8050)
