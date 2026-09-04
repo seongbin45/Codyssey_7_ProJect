@@ -114,9 +114,10 @@ notebook = {
    "metadata": {},
    "outputs": [],
    "source": [
-    "df['volatility_10'] = df['close'].rolling(window=10).std()\n",
-    "df['volatility_20'] = df['close'].rolling(window=20).std()\n",
-    "df['volatility_40'] = df['close'].rolling(window=40).std()\n",
+    "daily_return = df['close'].pct_change() * 100\n",
+    "df['volatility_10'] = daily_return.rolling(window=10).std()\n",
+    "df['volatility_20'] = daily_return.rolling(window=20).std()\n",
+    "df['volatility_40'] = daily_return.rolling(window=40).std()\n",
     "\n",
     "fig, ax1 = plt.subplots(figsize=(14, 7))\n",
     "\n",
@@ -125,7 +126,7 @@ notebook = {
     "ax1.plot(df.index, df['volatility_40'], color='magenta', label='40-Day Volatility', alpha=0.6)\n",
     "\n",
     "ax1.set_xlabel('Date')\n",
-    "ax1.set_ylabel('Volatility (Std Dev)', color='purple')\n",
+    "ax1.set_ylabel('Volatility (Std Dev of Daily Return, %)', color='purple')\n",
     "ax1.tick_params(axis='y', labelcolor='purple')\n",
     "ax1.legend(loc='upper left')\n",
     "\n",
@@ -135,7 +136,7 @@ notebook = {
     "ax2.tick_params(axis='y', labelcolor='gray')\n",
     "ax2.legend(loc='upper right')\n",
     "\n",
-    "plt.title('Volatility Sensitivity Analysis (10, 20, 40 days) and Trading Volume')\n",
+    "plt.title('Volatility Sensitivity Analysis (10, 20, 40 days, Daily Return %) and Trading Volume')\n",
     "fig.tight_layout()\n",
     "plt.show()"
    ]
@@ -266,7 +267,7 @@ notebook = {
  "nbformat_minor": 4
 }
 
-with open("c:/Users/seong/Desktop/ProJect/Codyssey_7_ProJect/analysis.ipynb", "w", encoding="utf-8") as f:
+with open("analysis.ipynb", "w", encoding="utf-8") as f:
     json.dump(notebook, f, ensure_ascii=False, indent=1)
 
 print("[INFO] analysis.ipynb 생성 완료.")
