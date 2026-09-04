@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.graphics.tsaplots import plot_acf
 from matplotlib import rcParams
 
 # 한글 폰트 설정 (Windows 기준)
@@ -41,12 +42,9 @@ def generate_price_trend_chart(df: pd.DataFrame, save_dir: str):
 
 def generate_monthly_return_chart(df: pd.DataFrame, save_dir: str):
     """2. 월별 수익률 분석"""
-    # 월별 마지막 거래일 기준 종가 추출
     monthly_close = df['close'].resample('ME').last()
-    # 월간 수익률 계산
     monthly_return = monthly_close.pct_change() * 100
     
-    # 2023년 데이터가 잘리므로 첫 달(2023-01)은 시작가 기준으로 보정
     if pd.isna(monthly_return.iloc[0]):
         first_open = df['open'].iloc[0]
         monthly_return.iloc[0] = ((monthly_close.iloc[0] - first_open) / first_open) * 100
@@ -68,24 +66,31 @@ def generate_monthly_return_chart(df: pd.DataFrame, save_dir: str):
     print(f"[INFO] Saved: {save_path}")
 
 def generate_volatility_volume_chart(df: pd.DataFrame, save_dir: str):
-    """3. 변동성(20일 롤링 표준편차) 및 거래량 시각화"""
+    """3. 변동성 민감도 분석 (10일, 20일, 40일 롤링 표준편차) 및 거래량"""
+    df['volatility_10'] = df['close'].rolling(window=10).std()
     df['volatility_20'] = df['close'].rolling(window=20).std()
+    df['volatility_40'] = df['close'].rolling(window=40).std()
     
     fig, ax1 = plt.subplots(figsize=(14, 7))
     
-    # 변동성 라인차트
-    ax1.plot(df.index, df['volatility_20'], color='purple', label='20-Day Volatility (Std Dev)')
+    # 변동성 라인차트 (다중 윈도우)
+    ax1.plot(df.index, df['volatility_10'], color='cyan', label='10-Day Volatility', alpha=0.6)
+    ax1.plot(df.index, df['volatility_20'], color='purple', label='20-Day Volatility', linewidth=2)
+    ax1.plot(df.index, df['volatility_40'], color='magenta', label='40-Day Volatility', alpha=0.6)
+    
     ax1.set_xlabel('Date')
-    ax1.set_ylabel('Volatility', color='purple')
+    ax1.set_ylabel('Volatility (Std Dev)', color='purple')
     ax1.tick_params(axis='y', labelcolor='purple')
+    ax1.legend(loc='upper left')
     
     # 거래량 바차트 (우측 축)
     ax2 = ax1.twinx()
     ax2.bar(df.index, df['volume'], color='gray', alpha=0.3, label='Volume')
     ax2.set_ylabel('Volume', color='gray')
     ax2.tick_params(axis='y', labelcolor='gray')
+    ax2.legend(loc='upper right')
     
-    plt.title('20-Day Rolling Volatility and Trading Volume')
+    plt.title('Volatility Sensitivity Analysis (10, 20, 40 days) and Trading Volume')
     fig.tight_layout()
     
     save_path = os.path.join(save_dir, '03_volatility_volume.png')
@@ -94,9 +99,7 @@ def generate_volatility_volume_chart(df: pd.DataFrame, save_dir: str):
     print(f"[INFO] Saved: {save_path}")
 
 def generate_seasonal_decompose(df: pd.DataFrame, save_dir: str):
-    """4. [보너스] 시계열 분해 (Seasonal Decomposition)"""
-    # 영업일 기준이므로 주기(period)를 20(약 한 달 영업일)으로 설정
-    # 결측치가 있으면 분해가 안 되므로 ffill 사용
+    """4. 시계열 분해 (Seasonal Decomposition)"""
     close_ffill = df['close'].asfreq('B').ffill()
     
     result = seasonal_decompose(close_ffill, model='multiplicative', period=20)
@@ -111,13 +114,11 @@ def generate_seasonal_decompose(df: pd.DataFrame, save_dir: str):
     print(f"[INFO] Saved: {save_path}")
 
 def generate_forecast(df: pd.DataFrame, save_dir: str):
-    """5. [보너스] 간단한 베이스라인 예측 (마지막 60일 비교)"""
-    # 마지막 60일을 Test로 분리
+    """5. 간단한 베이스라인 예측 (마지막 60일 비교)"""
     test_size = 60
     train = df.iloc[:-test_size]
     test = df.iloc[-test_size:]
     
-    # 베이스라인 모델: 직전 20일 이동평균을 미래 예측값으로 사용 (Naive 접근)
     last_sma20 = train['close'].rolling(20).mean().iloc[-1]
     
     plt.figure(figsize=(14, 7))
@@ -136,6 +137,44 @@ def generate_forecast(df: pd.DataFrame, save_dir: str):
     plt.close()
     print(f"[INFO] Saved: {save_path}")
 
+def generate_weekly_comparison_chart(df: pd.DataFrame, save_dir: str):
+    """6. 집계단위 비교 (일간 vs 주간 종가 흐름)"""
+    weekly_close = df['close'].resample('W').last()
+    
+    plt.figure(figsize=(14, 7))
+    plt.plot(df.index, df['close'], label='Daily Close (Noise)', color='lightgray', alpha=0.7)
+    plt.plot(weekly_close.index, weekly_close, label='Weekly Close (Trend)', color='blue', linewidth=2, marker='o', markersize=4)
+    
+    plt.title('Data Aggregation Comparison: Daily vs Weekly Close Price')
+    plt.xlabel('Date')
+    plt.ylabel('Price (KRW)')
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.5)
+    
+    save_path = os.path.join(save_dir, '06_weekly_comparison.png')
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+    print(f"[INFO] Saved: {save_path}")
+
+def generate_acf_pacf_chart(df: pd.DataFrame, save_dir: str):
+    """7. ACF 플롯을 통한 트렌드 및 주기성 검증"""
+    plt.figure(figsize=(14, 6))
+    ax = plt.subplot(111)
+    # 결측치 없는 시계열 생성 (B freq)
+    close_b = df['close'].asfreq('B').ffill()
+    # Lags = 40 (두 달 정도의 영업일)
+    plot_acf(close_b, lags=40, ax=ax, title='Autocorrelation Function (ACF) of Close Price')
+    
+    plt.xlabel('Lags (Business Days)')
+    plt.ylabel('Autocorrelation')
+    plt.grid(True, linestyle='--', alpha=0.5)
+    
+    save_path = os.path.join(save_dir, '07_acf_plot.png')
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+    print(f"[INFO] Saved: {save_path}")
+
+
 if __name__ == "__main__":
     DATA_PATH = "data/samsung_2023_2024.csv"
     SAVE_DIR = "images"
@@ -149,5 +188,7 @@ if __name__ == "__main__":
     generate_volatility_volume_chart(df.copy(), SAVE_DIR)
     generate_seasonal_decompose(df.copy(), SAVE_DIR)
     generate_forecast(df.copy(), SAVE_DIR)
+    generate_weekly_comparison_chart(df.copy(), SAVE_DIR)
+    generate_acf_pacf_chart(df.copy(), SAVE_DIR)
     
-    print("[INFO] 분석 완료.")
+    print("[INFO] 전체 분석 시각화 완료.")
