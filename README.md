@@ -13,7 +13,9 @@ Codyssey_7_ProJect/
 │   ├── 02_monthly_return.png         # 월별 수익률 막대 차트
 │   ├── 03_volatility_volume.png      # 변동성 및 거래량 시각화
 │   ├── 04_seasonal_decompose.png     # 시계열 분해 차트 (보너스)
-│   └── 05_forecast.png              # 단기 베이스라인 예측 차트 (보너스)
+│   ├── 05_forecast.png               # 단기 베이스라인 예측 차트 (보너스)
+│   ├── 06_weekly_comparison.png      # 일간/주간 집계 비교 차트 (보너스)
+│   └── 07_acf_plot.png               # ACF(자기상관함수) 플롯 (보너스)
 ├── collect_data.py                   # 데이터 수집 스크립트 (yfinance)
 ├── analysis.py                       # 핵심 데이터 분석 및 시각화 생성 스크립트
 ├── dashboard.py                      # Dash 기반 인터랙티브 웹 대시보드 스크립트 (보너스)
@@ -61,8 +63,8 @@ python collect_data.py
 python analysis.py
 ```
 - 수집된 CSV 데이터를 바탕으로 이동평균, 수익률, 변동성을 계산합니다.
-- 보너스 과제인 시계열 분해(Seasonal Decomposition)와 예측(Baseline Forecast)도 함께 수행됩니다.
-- 결과물은 `images/` 폴더에 `.png` 파일 5개로 저장됩니다.
+- 보너스 과제인 시계열 분해(Seasonal Decomposition), 예측(Baseline Forecast), 일간/주간 집계 비교, ACF 분석도 함께 수행됩니다.
+- 결과물은 `images/` 폴더에 `.png` 파일 7개로 저장됩니다.
 
 ### 4. 웹 대시보드 실행 (보너스 과제)
 ```powershell
